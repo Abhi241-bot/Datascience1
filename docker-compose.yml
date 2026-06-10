@@ -1,0 +1,152 @@
+# One-command stack. Phase 1 defines `mlflow` (always up) and the `train`
+# job (run on demand). Later phases add `api` and `monitoring` services.
+services:
+  mlflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.train
+    image: mlops-pipeline:latest
+    command: >
+      mlflow server
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --artifacts-destination /mlflow/artifacts
+      --serve-artifacts
+      --host 0.0.0.0 --port 5000
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow_data:/mlflow
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    image: mlops-pipeline-api:latest
+    ports:
+      - "8000:8000"
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      GIT_PYTHON_REFRESH: quiet
+    volumes:
+      - ./src:/app/src
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  monitoring:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    image: mlops-pipeline-api:latest
+    command: ["uvicorn", "src.monitor.dashboard:app", "--host", "0.0.0.0", "--port", "8050"]
+    ports:
+      - "8050:8050"
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      GIT_PYTHON_REFRESH: quiet
+    volumes:
+      - ./data:/app/data
+      - ./src:/app/src
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8050/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  # On-demand traffic simulator with an injected drift event.
+  # Run with:  docker compose run --rm simulate
+  simulate:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    image: mlops-pipeline-api:latest
+    profiles: ["jobs"]
+    depends_on:
+      monitoring:
+        condition: service_healthy
+    environment:
+      API_URL: http://api:8000
+      MONITOR_URL: http://monitoring:8050
+      GIT_PYTHON_REFRESH: quiet
+    volumes:
+      - ./data:/app/data
+      - ./src:/app/src
+    command: ["python", "-m", "src.simulate.stream"]
+
+  # On-demand closed-loop runner: drift -> retrain -> promote-if-better -> serve.
+  # Run with:  docker compose run --rm loop
+  loop:
+    build:
+      context: .
+      dockerfile: Dockerfile.train
+    image: mlops-pipeline:latest
+    profiles: ["jobs"]
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      API_URL: http://api:8000
+      MONITOR_URL: http://monitoring:8050
+      GIT_PYTHON_REFRESH: quiet
+    volumes:
+      - ./data:/app/data
+      - ./src:/app/src
+    command: ["python", "-m", "src.loop.run_loop"]
+
+  # On-demand lint + test runner (mirrors ci.yml). Run with:
+  #   docker compose run --rm test
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.train
+    image: mlops-pipeline:latest
+    profiles: ["jobs"]
+    environment:
+      GIT_PYTHON_REFRESH: quiet
+    volumes:
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - ./pyproject.toml:/app/pyproject.toml
+    command: ["sh", "-c", "ruff check src tests && python -m pytest"]
+
+  # On-demand training job: download -> preprocess -> train.
+  # Run with:  docker compose run --rm train
+  train:
+    build:
+      context: .
+      dockerfile: Dockerfile.train
+    image: mlops-pipeline:latest
+    profiles: ["jobs"]
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      GIT_PYTHON_REFRESH: quiet
+    volumes:
+      - ./data:/app/data
+      - ./src:/app/src
+    command: >
+      sh -c "python -m src.data.download &&
+             python -m src.data.preprocess &&
+             python -m src.train.train"
+
+volumes:
+  mlflow_data:

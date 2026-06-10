@@ -1,0 +1,53 @@
+name: retrain
+
+# Scheduled + manual retraining. Mirrors the local closed loop's retrain leg:
+# train a fresh model, then promote it ONLY if it beats the current Production
+# model (the gate). The live drift-triggered loop runs locally via
+# `docker compose run --rm loop`.
+on:
+  workflow_dispatch: {}
+  schedule:
+    # Every Monday at 03:00 UTC.
+    - cron: "0 3 * * 1"
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker compose build mlflow
+
+      - name: Start MLflow
+        run: |
+          docker compose up -d mlflow
+          for i in $(seq 1 30); do
+            if docker inspect --format '{{.State.Health.Status}}' \
+                 $(docker compose ps -q mlflow) | grep -q healthy; then
+              echo "mlflow healthy"; break
+            fi
+            sleep 5
+          done
+
+      - name: Train (download -> preprocess -> train)
+        run: docker compose run --rm train
+
+      - name: Promote only if better than current Production
+        run: docker compose run --rm train python -m src.registry.promote --only-if-better
+
+      - name: Show registry state
+        if: always()
+        run: |
+          docker compose run --rm train python - <<'PY'
+          from mlflow.tracking import MlflowClient
+          from src import config
+          c = MlflowClient()
+          for mv in c.search_model_versions(f"name='{config.REGISTERED_MODEL_NAME}'"):
+              print(f"v{mv.version}  stage={mv.current_stage}  pr_auc={mv.tags.get('pr_auc')}")
+          PY
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v

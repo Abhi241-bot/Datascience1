@@ -1,0 +1,29 @@
+# Data (pulled/generated at runtime, not committed)
+data/
+
+# MLflow local store
+mlruns/
+mlflow.db
+mlflow_data/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Reports & build artifacts
+reports/
+*.html
+artifacts/
+
+# Local run logs
+*.log
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,21 @@
+# Training / MLflow image. Python 3.11 for reliable ML wheels.
+FROM python:3.11-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1
+
+# libgomp1 is required by XGBoost; curl is used for container healthchecks.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgomp1 curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --timeout 180 --retries 10 -r requirements.txt
+
+COPY src ./src
+
+# Default: run the full Phase-1 pipeline. Overridable by compose service.
+CMD ["python", "-m", "src.train.train"]
