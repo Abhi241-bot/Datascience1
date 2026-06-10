@@ -1,6 +1,6 @@
 # Real-Time MLOps Fraud Detection & Drift Monitoring
 
-[![ci](https://github.com/<your-username>/mlops-realtime-pipeline/actions/workflows/ci.yml/badge.svg)](.github/workflows/ci.yml)
+[![ci](https://github.com/Abhi241-bot/Datascience1/actions/workflows/ci.yml/badge.svg)](https://github.com/Abhi241-bot/Datascience1/actions/workflows/ci.yml)
 
 An **end-to-end production ML system** that doesn't just train a model — it
 **owns one in production**. It serves real-time fraud predictions, monitors the
@@ -50,8 +50,8 @@ flowchart LR
 
 ## Live demo
 
-**▶ [Live demo on Hugging Face Spaces](https://huggingface.co/spaces/<your-username>/fraud-detection-realtime)**
-*(deploy it yourself in ~5 min — see [DEPLOY.md](DEPLOY.md))*
+**▶ [Live demo on Hugging Face Spaces](https://huggingface.co/spaces/Abhi241-bot/fraud-detection-realtime)**
+*(not deployed yet — deploy in ~5 min via [DEPLOY.md](DEPLOY.md); update this link if you name the Space differently)*
 
 On the demo: click **"Simulate a drift event"**, then open the live drift report
 to watch it flip from *no drift* → *drift detected*. Try `POST /predict` live in
