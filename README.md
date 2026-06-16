@@ -50,8 +50,8 @@ flowchart LR
 
 ## Live demo
 
-**▶ [Live demo on Hugging Face Spaces](https://huggingface.co/spaces/Abhi241-bot/fraud-detection-realtime)**
-*(not deployed yet — deploy in ~5 min via [DEPLOY.md](DEPLOY.md); update this link if you name the Space differently)*
+**▶ [Live demo on Hugging Face Spaces](https://huggingface.co/spaces/abhiram3000/fraud-detection-realtime)**
+*(deploy via [DEPLOY.md](DEPLOY.md))*
 
 On the demo: click **"Simulate a drift event"**, then open the live drift report
 to watch it flip from *no drift* → *drift detected*. Try `POST /predict` live in
