@@ -13,7 +13,7 @@ For each phase: **what was built**, the spec's **acceptance criteria**, and the
 | 4. Drift monitoring + dashboard | ✅ Done & verified |
 | 5. The closed loop | ✅ Done & verified |
 | 6. Containerize, test, document | ✅ Done & verified |
-| 7. README & deployment | ✅ Built & locally verified · 🔶 live deploy is user action |
+| 7. README & deployment | ✅ Done & verified (live demo deployed) |
 
 ---
 
@@ -171,15 +171,16 @@ a one-click `/simulate`).
 **Acceptance:** README with architecture, honest metrics, demo link, GIF;
 deployed to a free tier with a clickable URL.
 
-**Verified outcome (deploy app, locally):**
-- `/health` → `model_loaded: true`; `/simulate?n=300` → `drift_detected: true,
-  share 1.00` (600 rows); `/predict` fraud row → 0.9999; `/monitoring` → 200,
-  3.9 MB report; landing page has the "Simulate a drift event" button.
-- 🔶 **Pending user action:** click-to-deploy on Hugging Face (~5 min via
-  DEPLOY.md), then paste the live URL into the README and record the demo GIF.
-  (A transient local pip TLS-proxy error blocked the deploy *image* build on
-  this machine; the Dockerfile is standard and builds on HF's clean network —
-  the app itself was validated with the project image.)
+**Verified outcome:**
+- Local app: `/health` → `model_loaded: true`; `/simulate` → `drift_detected:
+  true, share 1.00`; `/predict` fraud row → 0.9999; `/monitoring` → 200, 3.9 MB
+  report; landing page has the "Simulate a drift event" button.
+- **Live demo deployed & running on Hugging Face Spaces:**
+  <https://huggingface.co/spaces/abhiram3000/fraud-detection-realtime> — the
+  build trains the model, the app serves predictions, and the drift dashboard
+  flips to "drift detected" (29/29 columns) after the simulate action.
+- 🔶 Optional polish remaining: record the 30–60s demo GIF and embed it in the
+  README.
 
 ---
 
@@ -190,4 +191,4 @@ deployed to a free tier with a clickable URL.
 - ✅ One config file (`src/config.py`) holds all thresholds/paths/hyperparameters.
 - ✅ The closed loop works and is demoable (DVC was the optional cut, per spec).
 - ✅ Runnable from a clean clone (verified with `down -v` + `up --build`).
-- 🔶 Clickable live demo URL — deploy config + guide ready; user deploys.
+- ✅ Clickable live demo URL — deployed on Hugging Face Spaces.
