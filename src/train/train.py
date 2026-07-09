@@ -10,10 +10,7 @@ from __future__ import annotations
 
 import sys
 
-import mlflow
-import mlflow.sklearn
 import pandas as pd
-from mlflow.models.signature import infer_signature
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import FunctionTransformer, StandardScaler
 from xgboost import XGBClassifier
@@ -48,6 +45,10 @@ def build_pipeline(scale_pos_weight: float) -> Pipeline:
 
 
 def train(include_drift: bool = False) -> str:
+    import mlflow
+    import mlflow.sklearn
+    from mlflow.models.signature import infer_signature
+
     mlflow.set_tracking_uri(config.MLFLOW_TRACKING_URI)
     mlflow.set_experiment(config.MLFLOW_EXPERIMENT)
 
