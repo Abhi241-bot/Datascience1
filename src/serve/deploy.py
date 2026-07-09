@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import json
 
-import mlflow.sklearn
+import pickle
 import pandas as pd
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -22,7 +22,8 @@ from src.data.preprocess import engineer_features
 from src.monitor import drift, live_log
 from src.serve.schemas import PredictionResponse, TransactionRequest, request_to_frame
 
-_MODEL = mlflow.sklearn.load_model(str(config.DEPLOY_MODEL_DIR))
+with open(config.DEPLOY_MODEL_DIR / "model.pkl", "rb") as f:
+    _MODEL = pickle.load(f)
 _METRICS_PATH = config.DEPLOY_MODEL_DIR.parent / "metrics.json"
 _METRICS = json.loads(_METRICS_PATH.read_text()) if _METRICS_PATH.exists() else {}
 _VERSION = "demo"

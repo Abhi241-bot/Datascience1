@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import json
 
-import mlflow.sklearn
+import pickle
 import pandas as pd
 
 from src import config
@@ -37,12 +37,13 @@ def main() -> None:
     metrics = compute_metrics(y_test, pipeline.predict_proba(x_test)[:, 1])
     print("[build_model] test metrics:\n" + format_metrics(metrics))
 
-    config.DEPLOY_MODEL_DIR.parent.mkdir(parents=True, exist_ok=True)
-    mlflow.sklearn.save_model(pipeline, path=str(config.DEPLOY_MODEL_DIR))
+    config.DEPLOY_MODEL_DIR.mkdir(parents=True, exist_ok=True)
+    with open(config.DEPLOY_MODEL_DIR / "model.pkl", "wb") as f:
+        pickle.dump(pipeline, f)
     (config.DEPLOY_MODEL_DIR.parent / "metrics.json").write_text(
         json.dumps(metrics, indent=2)
     )
-    print(f"[build_model] saved model to {config.DEPLOY_MODEL_DIR}")
+    print(f"[build_model] saved model to {config.DEPLOY_MODEL_DIR / 'model.pkl'}")
 
 
 if __name__ == "__main__":
