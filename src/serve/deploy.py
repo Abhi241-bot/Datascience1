@@ -10,8 +10,8 @@ Run with:  uvicorn src.serve.deploy:app --host 0.0.0.0 --port 7860
 from __future__ import annotations
 
 import json
-
 import pickle
+
 import pandas as pd
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, JSONResponse

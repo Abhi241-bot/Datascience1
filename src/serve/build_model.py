@@ -10,8 +10,8 @@ Run with:  python -m src.serve.build_model
 from __future__ import annotations
 
 import json
-
 import pickle
+
 import pandas as pd
 
 from src import config
